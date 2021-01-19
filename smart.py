@@ -1,7 +1,8 @@
-import subprocess
 import json
 import re
+import subprocess
 from datetime import datetime, timedelta
+
 from retpack import ok, fail
 
 '''
@@ -47,7 +48,12 @@ def get_drives():
         print("Unable to get drives: timeout")
         return fail(-1, "Unable to get drives: timeout")
     out = json.loads(raw_out.decode('utf-8'))
-    return ok(data=out['devices'])
+    devices = []
+    for device in out['devices']:
+        drive_name = device['info_name']
+        drive_info = get_drive_info(drive_name)
+        devices.append(drive_info)
+    return ok(data=devices)
 
 
 '''
@@ -91,6 +97,37 @@ def get_drive_temp(drive_name: str):
     temp_log['history'] = temp_log_history
     temp_data['log'] = temp_log
     return ok(data=temp_data)
+
+
+def get_drive_info(drive_name: str):
+    try:
+        raw_out = subprocess.check_output(["smartctl", "--info", "--json", drive_name], stderr=subprocess.STDOUT,
+                                          timeout=10)
+    except subprocess.CalledProcessError as ex:
+        print(ex)
+        raw_out = ex.output
+        return_code = ex.returncode
+        print("Errcode = {}".format(return_code))
+        print("CLI output = {}".format(raw_out))
+        return fail(return_code, "Unable to get drive {} info: call process error".format(drive_name))
+    except subprocess.TimeoutExpired:
+        print("Unable to get drives: timeout")
+        return fail(-1, "Unable to get drive {} info: timeout".format(drive_name))
+    out = json.loads(raw_out)
+    return {"device": out["device"],
+               "model_family": out["model_family"],
+               "model_name": out["model_name"],
+               "serial_number": out["serial_number"],
+               "firmware_version": out["firmware_version"],
+               "user_capacity": out["user_capacity"],
+               "logical_block_size": out["logical_block_size"],
+               "physical_block_size": out["physical_block_size"],
+               "rotation_rate": out["rotation_rate"],
+               "form_factor": out["form_factor"],
+               "ata_version": out["ata_version"],
+               "sata_version": out["sata_version"],
+               "interface_speed": out["interface_speed"]
+               }
 
 
 def main():
