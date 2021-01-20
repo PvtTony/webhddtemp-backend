@@ -50,7 +50,7 @@ def get_drives():
     out = json.loads(raw_out.decode('utf-8'))
     devices = []
     for device in out['devices']:
-        drive_name = device['info_name']
+        drive_name = device['name']
         drive_info = get_drive_info(drive_name)
         devices.append(drive_info)
     return ok(data=devices)
@@ -115,19 +115,18 @@ def get_drive_info(drive_name: str):
         return fail(-1, "Unable to get drive {} info: timeout".format(drive_name))
     out = json.loads(raw_out)
     return {"device": out["device"],
-               "model_family": out["model_family"],
-               "model_name": out["model_name"],
-               "serial_number": out["serial_number"],
-               "firmware_version": out["firmware_version"],
-               "user_capacity": out["user_capacity"],
-               "logical_block_size": out["logical_block_size"],
-               "physical_block_size": out["physical_block_size"],
-               "rotation_rate": out["rotation_rate"],
-               "form_factor": out["form_factor"],
-               "ata_version": out["ata_version"],
-               "sata_version": out["sata_version"],
-               "interface_speed": out["interface_speed"]
-               }
+            "model_family": out["model_family"] if "model_family" in out else "",
+            "model_name": out["model_name"],
+            "serial_number": out["serial_number"],
+            "firmware_version": out["firmware_version"],
+            "user_capacity": out["user_capacity"],
+            "logical_block_size": out["logical_block_size"],
+            "physical_block_size": out["physical_block_size"],
+            "rotation_rate": out["rotation_rate"],
+            "ata_version": out["ata_version"],
+            "sata_version": out["sata_version"],
+            "interface_speed": out["interface_speed"]
+            }
 
 
 def main():
