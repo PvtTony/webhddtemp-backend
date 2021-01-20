@@ -33,15 +33,22 @@ def set_fan_status():
 
 @app.route('/drives', methods=['GET'])
 def get_drives_list():
-    return jsonify(get_drives())
+    result = get_drives()
+    if result['code'] == 0:
+        return jsonify(result)
+    else:
+        return jsonify(result), 500
 
 
 @app.route('/temp', methods=['GET'])
 def get_drive_temperature():
     args = request.args
     if 'drive_name' not in args:
-        return fail(-10, "lack of argument: drive_name")
-    return jsonify(get_drive_temp(args['drive_name']))
+        return jsonify(fail(-10, "lack of argument: drive_name")), 500
+    result = get_drive_temp(args['drive_name'])
+    if result['code'] == 0:
+        return jsonify(result)
+    return jsonify(result), 500
 
 
 @app.errorhandler(500)
